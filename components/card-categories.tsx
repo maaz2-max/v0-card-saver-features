@@ -60,16 +60,16 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
   }))
 
   return (
-    <Card className="bg-black/20 backdrop-blur-sm border-0 text-white">
+    <Card className="light-mode-card">
       <div className="p-6">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center mb-6">
           <Tags className="mr-2 h-5 w-5" />
-          <h3 className="text-xl font-bold">Card Categories</h3>
+          <h3 className="text-xl font-bold light-mode-text">Card Categories</h3>
         </motion.div>
 
         <div className="space-y-6">
           <div>
-            <h4 className="text-lg font-medium mb-4">By Type</h4>
+            <h4 className="text-lg font-medium mb-4 light-mode-text">By Type</h4>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               {categories.map((category, index) => (
                 <motion.div
@@ -86,13 +86,13 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
                     <div className="flex items-center">
                       <div className="bg-white/10 p-2 rounded-full mr-3">{category.icon}</div>
                       <div>
-                        <h5 className="font-medium">{category.name}</h5>
+                        <h5 className="font-medium text-white">{category.name}</h5>
                         <p className="text-sm text-white/70">
                           {category.count} {category.count === 1 ? "card" : "cards"}
                         </p>
                       </div>
                     </div>
-                    <div className="text-2xl font-bold">{category.count}</div>
+                    <div className="text-2xl font-bold text-white">{category.count}</div>
                   </div>
                 </motion.div>
               ))}
@@ -100,7 +100,7 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
           </div>
 
           <div>
-            <h4 className="text-lg font-medium mb-4">By Bank</h4>
+            <h4 className="text-lg font-medium mb-4 light-mode-text">By Bank</h4>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {banks.map((bank, index) => (
                 <motion.div
@@ -119,13 +119,13 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
                         <Landmark className="h-5 w-5" />
                       </div>
                       <div>
-                        <h5 className="font-medium">{bank.name}</h5>
+                        <h5 className="font-medium text-white">{bank.name}</h5>
                         <p className="text-sm text-white/70">
                           {bank.count} {bank.count === 1 ? "card" : "cards"}
                         </p>
                       </div>
                     </div>
-                    <div className="text-2xl font-bold">{bank.count}</div>
+                    <div className="text-2xl font-bold text-white">{bank.count}</div>
                   </div>
                 </motion.div>
               ))}
@@ -137,11 +137,14 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
               initial={{ opacity: 0, height: 0 }}
               animate={{ opacity: 1, height: "auto" }}
               exit={{ opacity: 0, height: 0 }}
-              className="mt-6 bg-black/30 rounded-lg p-4"
+              className="mt-6 dark:bg-black/30 light:bg-gray-100 rounded-lg p-4"
             >
               <div className="flex justify-between items-center mb-4">
-                <h4 className="text-lg font-medium">{selectedCategory} Details</h4>
-                <button onClick={() => setSelectedCategory(null)} className="text-white/70 hover:text-white">
+                <h4 className="text-lg font-medium light-mode-text">{selectedCategory} Details</h4>
+                <button
+                  onClick={() => setSelectedCategory(null)}
+                  className="dark:text-white/70 dark:hover:text-white light:text-gray-600 light:hover:text-gray-900"
+                >
                   Close
                 </button>
               </div>
@@ -149,56 +152,76 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
               <div className="space-y-3">
                 {selectedCategory === "Credit Cards" &&
                   creditCards.map((card, i) => (
-                    <div key={i} className="flex items-center justify-between bg-black/20 p-3 rounded-lg">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between dark:bg-black/20 light:bg-white p-3 rounded-lg"
+                    >
                       <div className="flex items-center">
                         <CreditCardIcon className="h-5 w-5 mr-3 text-blue-400" />
                         <div>
-                          <div className="font-medium">{card.cardName}</div>
-                          <div className="text-sm text-white/70">**** **** **** {card.cardNumber.slice(-4)}</div>
+                          <div className="font-medium light-mode-text">{card.cardName}</div>
+                          <div className="text-sm dark:text-white/70 light:text-gray-600">
+                            **** **** **** {card.cardNumber.slice(-4)}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-sm">{card.bankName || "Unknown Bank"}</div>
+                      <div className="text-sm light-mode-text">{card.bankName || "Unknown Bank"}</div>
                     </div>
                   ))}
 
                 {selectedCategory === "Debit Cards" &&
                   debitCards.map((card, i) => (
-                    <div key={i} className="flex items-center justify-between bg-black/20 p-3 rounded-lg">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between dark:bg-black/20 light:bg-white p-3 rounded-lg"
+                    >
                       <div className="flex items-center">
                         <Wallet className="h-5 w-5 mr-3 text-green-400" />
                         <div>
-                          <div className="font-medium">{card.cardName}</div>
-                          <div className="text-sm text-white/70">**** **** **** {card.cardNumber.slice(-4)}</div>
+                          <div className="font-medium light-mode-text">{card.cardName}</div>
+                          <div className="text-sm dark:text-white/70 light:text-gray-600">
+                            **** **** **** {card.cardNumber.slice(-4)}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-sm">{card.bankName || "Unknown Bank"}</div>
+                      <div className="text-sm light-mode-text">{card.bankName || "Unknown Bank"}</div>
                     </div>
                   ))}
 
                 {selectedCategory === "Other Cards" &&
                   otherCards.map((card, i) => (
-                    <div key={i} className="flex items-center justify-between bg-black/20 p-3 rounded-lg">
+                    <div
+                      key={i}
+                      className="flex items-center justify-between dark:bg-black/20 light:bg-white p-3 rounded-lg"
+                    >
                       <div className="flex items-center">
                         <Gift className="h-5 w-5 mr-3 text-purple-400" />
                         <div>
-                          <div className="font-medium">{card.cardName}</div>
-                          <div className="text-sm text-white/70">**** **** **** {card.cardNumber.slice(-4)}</div>
+                          <div className="font-medium light-mode-text">{card.cardName}</div>
+                          <div className="text-sm dark:text-white/70 light:text-gray-600">
+                            **** **** **** {card.cardNumber.slice(-4)}
+                          </div>
                         </div>
                       </div>
-                      <div className="text-sm">{card.bankName || "Unknown Bank"}</div>
+                      <div className="text-sm light-mode-text">{card.bankName || "Unknown Bank"}</div>
                     </div>
                   ))}
 
                 {bankGroups[selectedCategory]?.map((card, i) => (
-                  <div key={i} className="flex items-center justify-between bg-black/20 p-3 rounded-lg">
+                  <div
+                    key={i}
+                    className="flex items-center justify-between dark:bg-black/20 light:bg-white p-3 rounded-lg"
+                  >
                     <div className="flex items-center">
                       <Building className="h-5 w-5 mr-3 text-indigo-400" />
                       <div>
-                        <div className="font-medium">{card.cardName}</div>
-                        <div className="text-sm text-white/70">**** **** **** {card.cardNumber.slice(-4)}</div>
+                        <div className="font-medium light-mode-text">{card.cardName}</div>
+                        <div className="text-sm dark:text-white/70 light:text-gray-600">
+                          **** **** **** {card.cardNumber.slice(-4)}
+                        </div>
                       </div>
                     </div>
-                    <div className="text-sm">
+                    <div className="text-sm light-mode-text">
                       {card.cardNumber.startsWith("4") ? "Credit" : card.cardNumber.startsWith("5") ? "Debit" : "Other"}
                     </div>
                   </div>

@@ -81,3 +81,85 @@
     linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
   background-size: 24px 24px;
 }
+
+/* Theme-based styles */
+.light-mode-text {
+  @apply text-gray-800 dark:text-white;
+}
+
+.light-mode-card {
+  @apply bg-white/90 text-gray-800 dark:bg-black/20 dark:text-white;
+}
+
+.light-mode-input {
+  @apply bg-gray-100 border-gray-300 text-gray-800 placeholder:text-gray-500
+         dark:bg-white/10 dark:border-white/20 dark:text-white dark:placeholder:text-gray-500;
+}
+
+.light-mode-button {
+  @apply bg-white/80 border-purple-500/30 text-gray-800 hover:bg-white/90
+         dark:bg-black/20 dark:border-purple-500/30 dark:text-white dark:hover:bg-black/30;
+}
+
+.light-mode-gradient {
+  @apply from-purple-100 via-blue-100 to-red-100
+         dark:from-purple-900 dark:via-blue-800 dark:to-red-900;
+}
+
+/* 3D Button Styles */
+.btn-3d {
+  transform-style: preserve-3d;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.btn-3d:hover {
+  transform: translateY(-3px) scale(1.02);
+  box-shadow: 0 10px 25px -5px rgba(124, 58, 237, 0.5);
+}
+
+.btn-3d:active {
+  transform: translateY(1px) scale(0.98) rotateY(5deg);
+}
+
+/* Animations */
+@keyframes float {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+@keyframes pulse-shadow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 10px rgba(124, 58, 237, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(124, 58, 237, 0);
+  }
+}
+
+.animate-pulse-shadow {
+  animation: pulse-shadow 2s infinite;
+}
+
+/* Performance optimizations */
+.will-change-transform {
+  will-change: transform;
+}
+
+.hardware-accelerated {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+}

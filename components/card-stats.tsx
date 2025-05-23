@@ -48,11 +48,11 @@ export default function CardStats({ cards }: CardStatsProps) {
   }
 
   return (
-    <Card className="bg-black/20 backdrop-blur-sm border-0 text-white">
+    <Card className="light-mode-card">
       <div className="p-6">
         <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="flex items-center mb-6">
           <BarChart3 className="mr-2 h-5 w-5" />
-          <h3 className="text-xl font-bold">Card Statistics</h3>
+          <h3 className="text-xl font-bold light-mode-text">Card Statistics</h3>
         </motion.div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -61,10 +61,10 @@ export default function CardStats({ cards }: CardStatsProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-black/30 rounded-lg p-4"
+            className="dark:bg-black/30 light:bg-gray-100 rounded-lg p-4"
           >
-            <h4 className="text-lg font-medium mb-4 flex items-center">
-              <PieChart className="h-5 w-5 mr-2 text-purple-400" />
+            <h4 className="text-lg font-medium mb-4 flex items-center light-mode-text">
+              <PieChart className="h-5 w-5 mr-2 dark:text-purple-400 light:text-purple-600" />
               Card Type Distribution
             </h4>
 
@@ -135,11 +135,17 @@ export default function CardStats({ cards }: CardStatsProps) {
                     y="50"
                     textAnchor="middle"
                     dominantBaseline="middle"
-                    className="fill-white text-lg font-bold"
+                    className="fill-current light-mode-text text-lg font-bold"
                   >
                     {totalCards}
                   </text>
-                  <text x="50" y="60" textAnchor="middle" dominantBaseline="middle" className="fill-white text-xs">
+                  <text
+                    x="50"
+                    y="60"
+                    textAnchor="middle"
+                    dominantBaseline="middle"
+                    className="fill-current light-mode-text text-xs"
+                  >
                     Total
                   </text>
                 </svg>
@@ -150,28 +156,30 @@ export default function CardStats({ cards }: CardStatsProps) {
               <div>
                 <div className="flex items-center justify-center">
                   <div className="w-3 h-3 rounded-full bg-blue-500 mr-1"></div>
-                  <span className="text-sm">Credit</span>
+                  <span className="text-sm light-mode-text">Credit</span>
                 </div>
-                <div className="font-bold">{creditCards}</div>
-                <div className="text-xs text-gray-400">{calculatePercentage(creditCards)}%</div>
+                <div className="font-bold light-mode-text">{creditCards}</div>
+                <div className="text-xs dark:text-gray-400 light:text-gray-500">
+                  {calculatePercentage(creditCards)}%
+                </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-center">
                   <div className="w-3 h-3 rounded-full bg-green-500 mr-1"></div>
-                  <span className="text-sm">Debit</span>
+                  <span className="text-sm light-mode-text">Debit</span>
                 </div>
-                <div className="font-bold">{debitCards}</div>
-                <div className="text-xs text-gray-400">{calculatePercentage(debitCards)}%</div>
+                <div className="font-bold light-mode-text">{debitCards}</div>
+                <div className="text-xs dark:text-gray-400 light:text-gray-500">{calculatePercentage(debitCards)}%</div>
               </div>
 
               <div>
                 <div className="flex items-center justify-center">
                   <div className="w-3 h-3 rounded-full bg-purple-500 mr-1"></div>
-                  <span className="text-sm">Other</span>
+                  <span className="text-sm light-mode-text">Other</span>
                 </div>
-                <div className="font-bold">{otherCards}</div>
-                <div className="text-xs text-gray-400">{calculatePercentage(otherCards)}%</div>
+                <div className="font-bold light-mode-text">{otherCards}</div>
+                <div className="text-xs dark:text-gray-400 light:text-gray-500">{calculatePercentage(otherCards)}%</div>
               </div>
             </div>
           </motion.div>
@@ -181,21 +189,21 @@ export default function CardStats({ cards }: CardStatsProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.2 }}
-            className="bg-black/30 rounded-lg p-4"
+            className="dark:bg-black/30 light:bg-gray-100 rounded-lg p-4"
           >
-            <h4 className="text-lg font-medium mb-4 flex items-center">
-              <CreditCard className="h-5 w-5 mr-2 text-blue-400" />
+            <h4 className="text-lg font-medium mb-4 flex items-center light-mode-text">
+              <CreditCard className="h-5 w-5 mr-2 dark:text-blue-400 light:text-blue-600" />
               Bank Distribution
             </h4>
 
             <div className="space-y-3">
               {Object.entries(bankDistribution).map(([bank, count], index) => (
                 <div key={bank} className="space-y-1">
-                  <div className="flex justify-between text-sm">
+                  <div className="flex justify-between text-sm light-mode-text">
                     <span>{bank}</span>
                     <span>{count} cards</span>
                   </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
+                  <div className="w-full dark:bg-gray-700 light:bg-gray-300 rounded-full h-2">
                     <motion.div
                       initial={{ width: 0 }}
                       animate={{ width: `${(count / totalCards) * 100}%` }}
@@ -213,10 +221,10 @@ export default function CardStats({ cards }: CardStatsProps) {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-black/30 rounded-lg p-4 md:col-span-2"
+            className="dark:bg-black/30 light:bg-gray-100 rounded-lg p-4 md:col-span-2"
           >
-            <h4 className="text-lg font-medium mb-4 flex items-center">
-              <Calendar className="h-5 w-5 mr-2 text-yellow-400" />
+            <h4 className="text-lg font-medium mb-4 flex items-center light-mode-text">
+              <Calendar className="h-5 w-5 mr-2 dark:text-yellow-400 light:text-yellow-600" />
               Expiring Cards
             </h4>
 
@@ -227,9 +235,9 @@ export default function CardStats({ cards }: CardStatsProps) {
                   const expiryYear = Number.parseInt(card.expiryDate.substring(2, 4))
                   const monthsDiff = (expiryYear - currentYear) * 12 + (expiryMonth - currentMonth)
 
-                  let statusColor = "text-green-400"
-                  if (monthsDiff <= 1) statusColor = "text-red-400"
-                  else if (monthsDiff <= 2) statusColor = "text-yellow-400"
+                  let statusColor = "dark:text-green-400 light:text-green-600"
+                  if (monthsDiff <= 1) statusColor = "dark:text-red-400 light:text-red-600"
+                  else if (monthsDiff <= 2) statusColor = "dark:text-yellow-400 light:text-yellow-600"
 
                   return (
                     <motion.div
@@ -237,13 +245,15 @@ export default function CardStats({ cards }: CardStatsProps) {
                       initial={{ opacity: 0, x: -20 }}
                       animate={{ opacity: 1, x: 0 }}
                       transition={{ delay: 0.4 + index * 0.1 }}
-                      className="flex items-center justify-between bg-black/20 p-3 rounded-lg"
+                      className="flex items-center justify-between dark:bg-black/20 light:bg-white p-3 rounded-lg"
                     >
                       <div className="flex items-center">
-                        <CreditCard className="h-5 w-5 mr-3 text-blue-400" />
+                        <CreditCard className="h-5 w-5 mr-3 dark:text-blue-400 light:text-blue-600" />
                         <div>
-                          <div className="font-medium">{card.cardName}</div>
-                          <div className="text-sm text-white/70">**** {card.cardNumber.slice(-4)}</div>
+                          <div className="font-medium light-mode-text">{card.cardName}</div>
+                          <div className="text-sm dark:text-white/70 light:text-gray-600">
+                            **** {card.cardNumber.slice(-4)}
+                          </div>
                         </div>
                       </div>
                       <div className="text-right">
@@ -251,7 +261,7 @@ export default function CardStats({ cards }: CardStatsProps) {
                           {monthsDiff <= 1 && <AlertTriangle className="h-4 w-4 mr-1" />}
                           Expires {expiryMonth}/{expiryYear}
                         </div>
-                        <div className="text-sm text-white/70">
+                        <div className="text-sm dark:text-white/70 light:text-gray-600">
                           {monthsDiff === 0
                             ? "This month"
                             : monthsDiff === 1
@@ -264,7 +274,7 @@ export default function CardStats({ cards }: CardStatsProps) {
                 })}
               </div>
             ) : (
-              <div className="text-center py-6 text-gray-400">
+              <div className="text-center py-6 dark:text-gray-400 light:text-gray-500">
                 <Calendar className="h-10 w-10 mx-auto mb-2 opacity-50" />
                 <p>No cards expiring in the next 3 months</p>
               </div>

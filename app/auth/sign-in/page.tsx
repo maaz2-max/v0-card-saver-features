@@ -2,7 +2,7 @@
 
 import type React from "react"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { motion } from "framer-motion"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
@@ -14,6 +14,7 @@ import { toast } from "@/components/ui/use-toast"
 import { Toaster } from "@/components/ui/toaster"
 import { getSupabaseBrowserClient } from "@/lib/supabase"
 import { Lock, Mail, ArrowRight, Loader2 } from "lucide-react"
+import { useAuth } from "@/components/auth-provider"
 
 export default function SignIn() {
   const [email, setEmail] = useState("")
@@ -21,18 +22,39 @@ export default function SignIn() {
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
   const supabase = getSupabaseBrowserClient()
+  const { user, isLoading: authLoading } = useAuth()
+
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (!authLoading && user) {
+      router.push("/")
+    }
+  }, [user, authLoading, router])
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (!email || !password) {
+      toast({
+        title: "Missing information",
+        description: "Please enter both email and password.",
+        variant: "destructive",
+      })
+      return
+    }
+
     setIsLoading(true)
 
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      console.log("Attempting to sign in with:", email)
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: password,
       })
 
       if (error) {
+        console.error("Sign in error:", error)
         toast({
           title: "Sign in failed",
           description: error.message,
@@ -41,15 +63,17 @@ export default function SignIn() {
         return
       }
 
-      toast({
-        title: "Signed in successfully",
-        description: "Welcome back to Card Saver!",
-      })
+      if (data.user) {
+        console.log("Sign in successful:", data.user.email)
+        toast({
+          title: "Signed in successfully",
+          description: "Welcome back to Card Saver!",
+        })
 
-      // Redirect to dashboard
-      router.push("/")
+        // The AuthProvider will handle the redirect
+      }
     } catch (error) {
-      console.error("Sign in error:", error)
+      console.error("Unexpected sign in error:", error)
       toast({
         title: "Sign in failed",
         description: "An unexpected error occurred. Please try again.",
@@ -60,8 +84,25 @@ export default function SignIn() {
     }
   }
 
+  // Show loading while checking auth state
+  if (authLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-800 to-red-900">
+        <div className="text-center">
+          <Loader2 className="h-10 w-10 animate-spin mx-auto text-purple-500 mb-4" />
+          <p className="text-white">Loading...</p>
+        </div>
+      </div>
+    )
+  }
+
+  // Don't render if user is already authenticated
+  if (user) {
+    return null
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-900 via-blue-800 to-red-900 pattern-grid-lg pattern-blue-500/10 pattern-opacity-10 p-4">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-purple-100 via-blue-100 to-red-100 dark:from-purple-900 dark:via-blue-800 dark:to-red-900 pattern-grid-lg pattern-blue-500/10 pattern-opacity-10 p-4">
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
@@ -112,6 +153,7 @@ export default function SignIn() {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your.email@example.com"
                 required
+                disabled={isLoading}
                 className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
               />
             </div>
@@ -127,6 +169,7 @@ export default function SignIn() {
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 required
+                disabled={isLoading}
                 className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
               />
             </div>
@@ -142,7 +185,7 @@ export default function SignIn() {
                 ) : (
                   <ArrowRight className="h-4 w-4 mr-2" />
                 )}
-                Sign In
+                {isLoading ? "Signing In..." : "Sign In"}
               </Button>
             </motion.div>
 

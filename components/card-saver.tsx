@@ -36,7 +36,7 @@ import type { CardData } from "@/types/card"
 import { preventScreenCapture } from "@/lib/security"
 import { useTheme } from "next-themes"
 import { useAuth } from "@/components/auth-provider"
-import { saveCard, getCards, deleteCard } from "@/lib/card-service"
+import { saveCard, getCards, deleteCard, getUserProfile } from "@/lib/card-service"
 
 export default function CardSaver() {
   const [cards, setCards] = useState<(CardData & { id: string })[]>([])
@@ -60,14 +60,34 @@ export default function CardSaver() {
   }, [])
 
   useEffect(() => {
-    // Load cards from Supabase
-    const loadCards = async () => {
+    // Load cards and user profile from Supabase
+    const loadData = async () => {
       if (!user) return
 
       setIsLoading(true)
       try {
+        // Load user profile first to get display name
+        try {
+          const profile = await getUserProfile()
+          if (profile.display_name) {
+            setDisplayName(profile.display_name)
+          }
+        } catch (profileError) {
+          console.error("Failed to load profile:", profileError)
+          // Continue loading cards even if profile fails
+        }
+
+        // Then load cards
         const loadedCards = await getCards()
         setCards(loadedCards)
+
+        // Show welcome toast on first load
+        if (loadedCards.length > 0) {
+          toast({
+            title: "Welcome back!",
+            description: `You have ${loadedCards.length} saved cards.`,
+          })
+        }
       } catch (error) {
         console.error("Failed to load cards:", error)
         toast({
@@ -81,7 +101,7 @@ export default function CardSaver() {
     }
 
     if (user) {
-      loadCards()
+      loadData()
     }
 
     // Prevent screen capture - apply strictly
@@ -159,6 +179,11 @@ export default function CardSaver() {
     setShowPinPad(false)
     setShowCardDetails(true)
 
+    toast({
+      title: "PIN Verified",
+      description: "Card details will be visible for 1 minute.",
+    })
+
     // Auto-hide CVV after 1 minute
     setTimeout(() => {
       setShowCardDetails(false)
@@ -176,6 +201,11 @@ export default function CardSaver() {
 
   const toggleTheme = () => {
     setTheme(theme === "dark" ? "light" : "dark")
+
+    toast({
+      title: `${theme === "dark" ? "Light" : "Dark"} Mode Activated`,
+      description: `You've switched to ${theme === "dark" ? "light" : "dark"} mode.`,
+    })
   }
 
   const handleProfileUpdate = (name: string) => {
@@ -220,53 +250,48 @@ export default function CardSaver() {
             className="flex items-center"
           >
             <img src="/logo.png" alt="Card Saver Logo" className="h-14 mr-3" />
-            <h1 className="text-4xl font-bold text-white tracking-tight">Card Saver</h1>
+            <h1 className="text-4xl font-bold light-mode-text tracking-tight">Card Saver</h1>
           </motion.div>
         </div>
         <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}
-          className="text-purple-200 max-w-md mx-auto flex items-center justify-center"
+          className="text-purple-200 dark:text-purple-200 light:text-purple-800 max-w-md mx-auto flex items-center justify-center"
         >
-          <Lock className="h-4 w-4 mr-2 text-purple-300" />
+          <Lock className="h-4 w-4 mr-2 dark:text-purple-300 light:text-purple-600" />
           Securely store and manage your payment cards with advanced encryption and security features
-          <Sparkles className="h-4 w-4 ml-2 text-purple-300" />
+          <Sparkles className="h-4 w-4 ml-2 dark:text-purple-300 light:text-purple-600" />
         </motion.p>
       </motion.div>
 
-      <div className="flex justify-between mb-4 flex-wrap gap-2">
+      <div className="flex flex-col sm:flex-row justify-between mb-4 gap-2">
         <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }} className="transform transition-transform">
           <Button
             variant="outline"
             size="sm"
             onClick={() => setActiveTab("profile")}
-            className="bg-black/20 border-purple-500/30 text-white hover:bg-black/30"
+            className="light-mode-button w-full sm:w-auto"
           >
             <User className="h-4 w-4 mr-2" />
-            {displayName || user?.email?.split("@")[0] || "Profile"}
+            {displayName || (user?.email ? user.email.split("@")[0] : "Profile")}
           </Button>
         </motion.div>
 
-        <div className="flex flex-wrap gap-2">
+        <div className="flex flex-wrap gap-2 mt-2 sm:mt-0">
           <motion.div
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
             className="transform transition-transform"
           >
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={toggleTheme}
-              className="bg-black/20 border-purple-500/30 text-white hover:bg-black/30"
-            >
+            <Button variant="outline" size="sm" onClick={toggleTheme} className="light-mode-button">
               {theme === "dark" ? (
                 <>
-                  <Sun className="h-4 w-4 mr-2" /> Light Mode
+                  <Sun className="h-4 w-4 mr-2" /> Light
                 </>
               ) : (
                 <>
-                  <Moon className="h-4 w-4 mr-2" /> Dark Mode
+                  <Moon className="h-4 w-4 mr-2" /> Dark
                 </>
               )}
             </Button>
@@ -282,10 +307,12 @@ export default function CardSaver() {
                 variant="outline"
                 size="sm"
                 onClick={() => setDeleteMode(!deleteMode)}
-                className={`${deleteMode ? "bg-red-900/50 border-red-500" : "bg-black/20 border-purple-500/30"} text-white hover:bg-black/30`}
+                className={`${deleteMode ? "bg-red-900/50 border-red-500" : ""} light-mode-button ${
+                  deleteMode && theme === "light" ? "bg-red-100 text-red-800 border-red-500" : ""
+                }`}
               >
                 <Trash2 className="mr-2 h-4 w-4" />
-                {deleteMode ? "Cancel" : "Delete Cards"}
+                {deleteMode ? "Cancel" : "Delete"}
               </Button>
             </motion.div>
           )}
@@ -293,52 +320,52 @@ export default function CardSaver() {
       </div>
 
       <Tabs defaultValue="cards" value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 mb-8 bg-black/30 p-1 overflow-x-auto">
+        <TabsList className="grid w-full grid-cols-3 md:grid-cols-6 mb-8 bg-black/30 dark:bg-black/30 bg-white/80 p-1 overflow-x-auto gap-1">
           <TabsTrigger
             value="cards"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white dark:text-white text-gray-800 text-xs md:text-sm"
           >
-            <CreditCard className="mr-2 h-4 w-4" />
+            <CreditCard className="mr-1 h-4 w-4" />
             <span className="hidden sm:inline">My Cards</span>
             <span className="sm:hidden">Cards</span>
           </TabsTrigger>
           <TabsTrigger
             value="categories"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white dark:text-white text-gray-800 text-xs md:text-sm"
           >
-            <Tags className="mr-2 h-4 w-4" />
+            <Tags className="mr-1 h-4 w-4" />
             <span className="hidden sm:inline">Categories</span>
             <span className="sm:hidden">Categ.</span>
           </TabsTrigger>
           <TabsTrigger
             value="stats"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white dark:text-white text-gray-800 text-xs md:text-sm"
           >
-            <BarChart3 className="mr-2 h-4 w-4" />
+            <BarChart3 className="mr-1 h-4 w-4" />
             <span className="hidden sm:inline">Stats</span>
             <span className="sm:hidden">Stats</span>
           </TabsTrigger>
           <TabsTrigger
             value="security"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white dark:text-white text-gray-800 text-xs md:text-sm"
           >
-            <Shield className="mr-2 h-4 w-4" />
+            <Shield className="mr-1 h-4 w-4" />
             <span className="hidden sm:inline">Security</span>
             <span className="sm:hidden">Secure</span>
           </TabsTrigger>
           <TabsTrigger
             value="settings"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white dark:text-white text-gray-800 text-xs md:text-sm"
           >
-            <Settings className="mr-2 h-4 w-4" />
+            <Settings className="mr-1 h-4 w-4" />
             <span className="hidden sm:inline">Settings</span>
             <span className="sm:hidden">Settings</span>
           </TabsTrigger>
           <TabsTrigger
             value="profile"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white dark:text-white text-gray-800 text-xs md:text-sm"
           >
-            <User className="mr-2 h-4 w-4" />
+            <User className="mr-1 h-4 w-4" />
             <span className="hidden sm:inline">Profile</span>
             <span className="sm:hidden">Profile</span>
           </TabsTrigger>
@@ -359,8 +386,8 @@ export default function CardSaver() {
                     onClick={() => setActiveCategory("all")}
                     className={
                       activeCategory === "all"
-                        ? "bg-gradient-to-r from-purple-600 to-blue-600"
-                        : "bg-black/20 border-purple-500/30 text-white"
+                        ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+                        : "light-mode-button"
                     }
                   >
                     All Cards
@@ -377,8 +404,8 @@ export default function CardSaver() {
                     onClick={() => setActiveCategory("credit")}
                     className={
                       activeCategory === "credit"
-                        ? "bg-gradient-to-r from-purple-600 to-blue-600"
-                        : "bg-black/20 border-purple-500/30 text-white"
+                        ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+                        : "light-mode-button"
                     }
                   >
                     Credit
@@ -395,8 +422,8 @@ export default function CardSaver() {
                     onClick={() => setActiveCategory("debit")}
                     className={
                       activeCategory === "debit"
-                        ? "bg-gradient-to-r from-purple-600 to-blue-600"
-                        : "bg-black/20 border-purple-500/30 text-white"
+                        ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+                        : "light-mode-button"
                     }
                   >
                     Debit
@@ -413,15 +440,15 @@ export default function CardSaver() {
                     onClick={() => setActiveCategory("other")}
                     className={
                       activeCategory === "other"
-                        ? "bg-gradient-to-r from-purple-600 to-blue-600"
-                        : "bg-black/20 border-purple-500/30 text-white"
+                        ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+                        : "light-mode-button"
                     }
                   >
                     Other
                   </Button>
                 </motion.div>
               </div>
-              <div className="text-white text-sm">
+              <div className="light-mode-text text-sm">
                 {filteredCards.length} {filteredCards.length === 1 ? "card" : "cards"} found
               </div>
             </div>
@@ -432,7 +459,7 @@ export default function CardSaver() {
               <div className="flex justify-center items-center py-20">
                 <div className="text-center">
                   <Loader2 className="h-10 w-10 animate-spin mx-auto text-purple-500 mb-4" />
-                  <p className="text-white">Loading your cards...</p>
+                  <p className="light-mode-text">Loading your cards...</p>
                 </div>
               </div>
             ) : cards.length === 0 && !showAddCard ? (
@@ -440,9 +467,9 @@ export default function CardSaver() {
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
-                className="text-center p-12 bg-black/20 rounded-lg backdrop-blur-sm border border-white/10"
+                className="text-center p-12 light-mode-card rounded-lg backdrop-blur-sm border border-white/10 dark:border-white/10 light:border-purple-200/50"
               >
-                <div className="text-white mb-4">
+                <div className="light-mode-text mb-4">
                   <motion.div
                     animate={{
                       y: [0, -10, 0],
@@ -454,10 +481,10 @@ export default function CardSaver() {
                       repeatType: "reverse",
                     }}
                   >
-                    <CreditCard className="mx-auto h-16 w-16 opacity-50 mb-4" />
+                    <CreditCard className="mx-auto h-16 w-16 opacity-50 mb-4 dark:text-white light:text-gray-600" />
                   </motion.div>
                   <h3 className="text-xl font-medium">No Cards Saved</h3>
-                  <p className="text-gray-300 mt-2">Add your first card to get started</p>
+                  <p className="dark:text-gray-300 light:text-gray-600 mt-2">Add your first card to get started</p>
                 </div>
                 <motion.div
                   whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(124, 58, 237, 0.5)" }}
@@ -518,15 +545,15 @@ export default function CardSaver() {
                 exit={{ opacity: 0, scale: 0.9 }}
                 className="fixed inset-0 flex items-center justify-center z-50 bg-black/70 backdrop-blur-sm p-4"
               >
-                <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl shadow-2xl max-w-md w-full border border-white/10">
+                <div className="bg-gradient-to-br from-gray-900 to-black dark:from-gray-900 dark:to-black light:from-gray-100 light:to-white p-6 rounded-xl shadow-2xl max-w-md w-full border border-white/10 dark:border-white/10 light:border-purple-200/50">
                   <div className="flex justify-between items-center mb-4">
-                    <h3 className="text-xl font-bold text-white">Card Details</h3>
+                    <h3 className="text-xl font-bold light-mode-text">Card Details</h3>
                     <motion.div whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }}>
                       <Button
                         variant="ghost"
                         size="sm"
                         onClick={() => setShowCardDetails(false)}
-                        className="text-gray-400 hover:text-white"
+                        className="dark:text-gray-400 dark:hover:text-white light:text-gray-600 light:hover:text-gray-900"
                       >
                         Close
                       </Button>
@@ -541,19 +568,19 @@ export default function CardSaver() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.2 }}
-                        className="bg-black/30 p-3 rounded-lg"
+                        className="dark:bg-black/30 light:bg-gray-100 p-3 rounded-lg"
                       >
-                        <div className="text-purple-300 text-xs">ATM PIN</div>
-                        <div className="text-white font-mono text-lg">{selectedCard.atmPin || "••••"}</div>
+                        <div className="dark:text-purple-300 light:text-purple-600 text-xs">ATM PIN</div>
+                        <div className="light-mode-text font-mono text-lg">{selectedCard.atmPin || "••••"}</div>
                       </motion.div>
                       <motion.div
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.3 }}
-                        className="bg-black/30 p-3 rounded-lg"
+                        className="dark:bg-black/30 light:bg-gray-100 p-3 rounded-lg"
                       >
-                        <div className="text-purple-300 text-xs">Security PIN</div>
-                        <div className="text-white font-mono text-lg">{selectedCard.pin}</div>
+                        <div className="dark:text-purple-300 light:text-purple-600 text-xs">Security PIN</div>
+                        <div className="light-mode-text font-mono text-lg">{selectedCard.pin}</div>
                       </motion.div>
                     </div>
 
@@ -561,9 +588,9 @@ export default function CardSaver() {
                       initial={{ opacity: 0, y: 10 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.4 }}
-                      className="flex items-center justify-center text-center text-gray-400 text-sm bg-red-900/20 border border-red-500/30 p-2 rounded-lg"
+                      className="flex items-center justify-center text-center dark:text-gray-400 light:text-gray-600 text-sm dark:bg-red-900/20 light:bg-red-100 dark:border-red-500/30 light:border-red-300 p-2 rounded-lg border"
                     >
-                      <Info className="h-4 w-4 mr-2 text-red-400" />
+                      <Info className="h-4 w-4 mr-2 dark:text-red-400 light:text-red-500" />
                       <p>CVV and sensitive details will be hidden automatically after 1 minute</p>
                     </motion.div>
                   </div>
@@ -586,15 +613,15 @@ export default function CardSaver() {
         </TabsContent>
 
         <TabsContent value="settings">
-          <Card className="bg-black/20 backdrop-blur-sm border-0 text-white">
+          <Card className="light-mode-card">
             <div className="p-6">
-              <h3 className="text-xl font-bold mb-4 flex items-center">
+              <h3 className="text-xl font-bold mb-4 flex items-center light-mode-text">
                 <Settings className="mr-2 h-5 w-5" /> Settings
               </h3>
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <h4 className="font-medium text-lg">Theme</h4>
+                  <h4 className="font-medium text-lg light-mode-text">Theme</h4>
                   <div className="flex space-x-2">
                     <motion.div
                       whileHover={{ scale: 1.05 }}
@@ -604,7 +631,11 @@ export default function CardSaver() {
                       <Button
                         onClick={() => setTheme("dark")}
                         variant={theme === "dark" ? "default" : "outline"}
-                        className={theme === "dark" ? "bg-gradient-to-r from-purple-600 to-blue-600" : ""}
+                        className={
+                          theme === "dark"
+                            ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+                            : "light-mode-button"
+                        }
                       >
                         <Moon className="mr-2 h-4 w-4" /> Dark
                       </Button>
@@ -617,7 +648,11 @@ export default function CardSaver() {
                       <Button
                         onClick={() => setTheme("light")}
                         variant={theme === "light" ? "default" : "outline"}
-                        className={theme === "light" ? "bg-gradient-to-r from-purple-600 to-blue-600" : ""}
+                        className={
+                          theme === "light"
+                            ? "bg-gradient-to-r from-purple-600 to-blue-600 text-white"
+                            : "light-mode-button"
+                        }
                       >
                         <Sun className="mr-2 h-4 w-4" /> Light
                       </Button>
@@ -626,7 +661,7 @@ export default function CardSaver() {
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="font-medium text-lg">Data Management</h4>
+                  <h4 className="font-medium text-lg light-mode-text">Data Management</h4>
                   <div className="flex space-x-2">
                     <motion.div
                       whileHover={{ scale: 1.05 }}
@@ -665,12 +700,13 @@ export default function CardSaver() {
                 </div>
 
                 <div className="space-y-2">
-                  <h4 className="font-medium text-lg">About</h4>
-                  <p className="text-gray-300">
+                  <h4 className="font-medium text-lg light-mode-text">About</h4>
+                  <p className="dark:text-gray-300 light:text-gray-600">
                     Card Saver is a secure application for storing and managing your payment cards. All data is
                     encrypted and stored securely in the cloud.
                   </p>
-                  <p className="text-gray-300">Version 3.0</p>
+                  <p className="dark:text-gray-300 light:text-gray-600">Version 3.0</p>
+                  <p className="dark:text-gray-300 light:text-gray-600">Developed by Mohammed Maaz A</p>
                 </div>
               </div>
             </div>
@@ -682,12 +718,12 @@ export default function CardSaver() {
         </TabsContent>
       </Tabs>
 
-      <footer className="mt-12 text-center text-purple-200 text-sm">
+      <footer className="mt-12 text-center dark:text-purple-200 light:text-purple-800 text-sm">
         <div className="flex items-center justify-center mb-2">
           <img src="/logo.png" alt="Card Saver Logo" className="h-5 mr-2" />
           <p>Developed by Mohammed Maaz A</p>
         </div>
-        <p className="mt-1 text-purple-300/60">© {new Date().getFullYear()} Card Saver</p>
+        <p className="mt-1 dark:text-purple-300/60 light:text-purple-600/60">© {new Date().getFullYear()} Card Saver</p>
       </footer>
 
       <AnimatePresence>{showSuccess && <SuccessAnimation />}</AnimatePresence>

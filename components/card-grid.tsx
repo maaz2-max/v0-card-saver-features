@@ -28,11 +28,11 @@ export default function CardGrid({ cards, onCardSelect, onAddCard, deleteMode, o
 
   return (
     <div>
-      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-6 relative">
+      <motion.div initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }} className="mb-4 sm:mb-6 relative">
         <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-4 w-4" />
         <Input
           type="text"
-          placeholder="Search cards by name or bank..."
+          placeholder="Search cards..."
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
           className="pl-10 bg-black/20 border-white/10 text-white placeholder:text-gray-500 w-full"
@@ -56,7 +56,7 @@ export default function CardGrid({ cards, onCardSelect, onAddCard, deleteMode, o
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
         >
           {filteredCards.map((card, index) => (
             <motion.div
@@ -95,7 +95,7 @@ export default function CardGrid({ cards, onCardSelect, onAddCard, deleteMode, o
           >
             <Button
               onClick={onAddCard}
-              className="h-full min-h-[200px] w-full bg-gradient-to-br from-black/30 to-black/10 hover:from-black/40 hover:to-black/20 backdrop-blur-sm border-2 border-dashed border-purple-400/30 rounded-xl text-white transform transition-all duration-300"
+              className="h-full min-h-[180px] w-full bg-gradient-to-br from-black/30 to-black/10 hover:from-black/40 hover:to-black/20 backdrop-blur-sm border-2 border-dashed border-purple-400/30 rounded-xl text-white transform transition-all duration-300"
             >
               <Plus className="mr-2 h-6 w-6" /> Add New Card
             </Button>

@@ -3,7 +3,7 @@
 import type React from "react"
 
 import { createContext, useContext, useEffect, useState } from "react"
-import { useRouter } from "next/navigation"
+import { useRouter, usePathname } from "next/navigation"
 import { getSupabaseBrowserClient } from "@/lib/supabase"
 import type { Session, User } from "@supabase/supabase-js"
 
@@ -28,6 +28,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const router = useRouter()
+  const pathname = usePathname()
   const supabase = getSupabaseBrowserClient()
 
   useEffect(() => {
@@ -36,13 +37,32 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         const { data, error } = await supabase.auth.getSession()
         if (error) {
+          console.error("Error getting session:", error)
           throw error
         }
 
         setSession(data.session)
         setUser(data.session?.user ?? null)
+
+        // Handle redirects based on authentication state
+        if (data.session?.user) {
+          // User is authenticated
+          if (pathname?.startsWith("/auth/")) {
+            router.push("/")
+          }
+        } else {
+          // User is not authenticated
+          if (!pathname?.startsWith("/auth/")) {
+            router.push("/auth/sign-in")
+          }
+        }
       } catch (error) {
         console.error("Error getting session:", error)
+        setSession(null)
+        setUser(null)
+        if (!pathname?.startsWith("/auth/")) {
+          router.push("/auth/sign-in")
+        }
       } finally {
         setIsLoading(false)
       }
@@ -50,28 +70,54 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     getSession()
 
-    const { data: authListener } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state changed:", event, session?.user?.email)
+
       setSession(session)
       setUser(session?.user ?? null)
       setIsLoading(false)
 
-      // Update the stored auth state
+      // Handle authentication events
       if (event === "SIGNED_IN" && session) {
-        router.refresh()
+        console.log("User signed in, redirecting to dashboard")
+        router.push("/")
       }
+
       if (event === "SIGNED_OUT") {
-        router.refresh()
+        console.log("User signed out, redirecting to sign-in")
+        router.push("/auth/sign-in")
+      }
+
+      if (event === "TOKEN_REFRESHED") {
+        console.log("Token refreshed")
       }
     })
 
     return () => {
       authListener.subscription.unsubscribe()
     }
-  }, [supabase, router])
+  }, [supabase, router, pathname])
 
   const signOut = async () => {
-    await supabase.auth.signOut()
-    router.push("/auth/sign-in")
+    try {
+      setIsLoading(true)
+      const { error } = await supabase.auth.signOut()
+      if (error) {
+        console.error("Error signing out:", error)
+        throw error
+      }
+
+      // Clear local state
+      setSession(null)
+      setUser(null)
+
+      // Redirect to sign-in page
+      router.push("/auth/sign-in")
+    } catch (error) {
+      console.error("Sign out error:", error)
+    } finally {
+      setIsLoading(false)
+    }
   }
 
   const value = {

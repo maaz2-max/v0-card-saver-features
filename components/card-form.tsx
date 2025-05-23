@@ -199,16 +199,16 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
       </div>
 
       <Tabs defaultValue="basic" value={activeTab} onValueChange={setActiveTab}>
-        <TabsList className="grid w-full grid-cols-2 mb-6">
+        <TabsList className="grid w-full grid-cols-2 mb-6 gap-1">
           <TabsTrigger
             value="basic"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white text-sm"
           >
             Basic Info
           </TabsTrigger>
           <TabsTrigger
             value="security"
-            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white text-sm"
           >
             Security
           </TabsTrigger>
@@ -271,7 +271,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
               {errors.cardNumber && <p className="text-red-400 text-sm">{errors.cardNumber}</p>}
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <Label htmlFor="expiryDate" className="text-white flex items-center">
                   <Calendar className="h-4 w-4 mr-2" /> Expiry Date
@@ -331,7 +331,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="pt-2 border-t border-white/10">
               <h4 className="text-white font-medium mb-4">Security PIN</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="pin" className="text-white">
                     4-Digit Security PIN
@@ -366,7 +366,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
 
             <div className="pt-2 border-t border-white/10">
               <h4 className="text-white font-medium mb-4">ATM PIN</h4>
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <Label htmlFor="atmPin" className="text-white">
                     4-Digit ATM PIN
