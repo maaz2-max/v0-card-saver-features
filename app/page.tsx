@@ -1,11 +1,21 @@
 "use client"
 
+import { useEffect } from "react"
 import { useAuth } from "@/components/auth-provider"
 import CardSaver from "@/components/card-saver"
 import { Loader2 } from "lucide-react"
+import { useRouter } from "next/navigation"
 
 export default function Home() {
   const { user, isLoading } = useAuth()
+  const router = useRouter()
+
+  useEffect(() => {
+    if (!isLoading && !user) {
+      // Redirect to features page if not logged in
+      router.push("/features")
+    }
+  }, [user, isLoading, router])
 
   if (isLoading) {
     return (
@@ -19,9 +29,7 @@ export default function Home() {
   }
 
   if (!user) {
-    // Redirect to landing page if not logged in
-    window.location.href = "/landing"
-    return null
+    return null // Will redirect in the useEffect
   }
 
   return (

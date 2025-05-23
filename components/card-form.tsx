@@ -12,15 +12,26 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { Checkbox } from "@/components/ui/checkbox"
 import type { CardData } from "@/types/card"
 import { formatCardNumber, formatExpiryDate } from "@/lib/format"
-import { CreditCard, X, Save, CreditCardIcon as CardIcon, Building, User, Calendar, KeyRound } from "lucide-react"
+import {
+  CreditCard,
+  X,
+  Save,
+  CreditCardIcon as CardIcon,
+  Building,
+  User,
+  Calendar,
+  KeyRound,
+  Loader2,
+} from "lucide-react"
 import { generateCardBackground } from "@/lib/colors"
 
 interface CardFormProps {
   onSave: (card: CardData) => void
   onCancel: () => void
+  isSaving?: boolean
 }
 
-export default function CardForm({ onSave, onCancel }: CardFormProps) {
+export default function CardForm({ onSave, onCancel, isSaving = false }: CardFormProps) {
   const [cardName, setCardName] = useState("")
   const [bankName, setBankName] = useState("")
   const [cardHolderName, setCardHolderName] = useState("")
@@ -135,7 +146,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (validateForm()) {
+    if (validateForm() && !isSaving) {
       const card: CardData = {
         cardName,
         bankName,
@@ -156,7 +167,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
   }
 
   return (
-    <Card className="bg-black/20 backdrop-blur-sm border-0 p-6 rounded-xl shadow-xl">
+    <Card className="bg-black/20 backdrop-blur-sm border-0 p-4 sm:p-6 rounded-xl shadow-xl">
       <div className="flex justify-between items-center mb-6">
         <h3 className="text-xl font-bold text-white flex items-center">
           <CreditCard className="mr-2 h-5 w-5" /> Add New Card
@@ -226,6 +237,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                 onChange={(e) => setCardName(e.target.value)}
                 placeholder="e.g. My Debit Card"
                 className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
+                disabled={isSaving}
               />
               {errors.cardName && <p className="text-red-400 text-sm">{errors.cardName}</p>}
             </div>
@@ -240,6 +252,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                 onChange={(e) => setBankName(e.target.value)}
                 placeholder="e.g. Chase, Bank of America"
                 className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
+                disabled={isSaving}
               />
             </div>
 
@@ -253,6 +266,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                 onChange={(e) => setCardHolderName(e.target.value)}
                 placeholder="e.g. John Smith"
                 className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
+                disabled={isSaving}
               />
               {errors.cardHolderName && <p className="text-red-400 text-sm">{errors.cardHolderName}</p>}
             </div>
@@ -267,6 +281,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                 onChange={handleCardNumberChange}
                 placeholder="1234 5678 9012 3456"
                 className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 font-mono"
+                disabled={isSaving}
               />
               {errors.cardNumber && <p className="text-red-400 text-sm">{errors.cardNumber}</p>}
             </div>
@@ -282,6 +297,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                   onChange={handleExpiryDateChange}
                   placeholder="MM/YY"
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 font-mono"
+                  disabled={isSaving}
                 />
                 {errors.expiryDate && <p className="text-red-400 text-sm">{errors.expiryDate}</p>}
               </div>
@@ -296,6 +312,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                       id="includeCvv"
                       checked={includeCvv}
                       onCheckedChange={(checked) => setIncludeCvv(checked as boolean)}
+                      disabled={isSaving}
                     />
                     <label htmlFor="includeCvv" className="text-xs text-gray-300">
                       Include CVV
@@ -308,7 +325,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                   onChange={handleCvvChange}
                   placeholder="123"
                   type="password"
-                  disabled={!includeCvv}
+                  disabled={!includeCvv || isSaving}
                   className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 font-mono disabled:opacity-50"
                 />
                 {errors.cvv && <p className="text-red-400 text-sm">{errors.cvv}</p>}
@@ -320,6 +337,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                 type="button"
                 onClick={() => setActiveTab("security")}
                 className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium py-2 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                disabled={isSaving}
               >
                 Next: Security
               </Button>
@@ -343,6 +361,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                     placeholder="1234"
                     type="password"
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 font-mono"
+                    disabled={isSaving}
                   />
                   {errors.pin && <p className="text-red-400 text-sm">{errors.pin}</p>}
                 </div>
@@ -358,6 +377,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                     placeholder="1234"
                     type="password"
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 font-mono"
+                    disabled={isSaving}
                   />
                   {errors.confirmPin && <p className="text-red-400 text-sm">{errors.confirmPin}</p>}
                 </div>
@@ -378,6 +398,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                     placeholder="1234"
                     type="password"
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 font-mono"
+                    disabled={isSaving}
                   />
                   {errors.atmPin && <p className="text-red-400 text-sm">{errors.atmPin}</p>}
                 </div>
@@ -393,6 +414,7 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                     placeholder="1234"
                     type="password"
                     className="bg-white/10 border-white/20 text-white placeholder:text-gray-500 font-mono"
+                    disabled={isSaving}
                   />
                   {errors.confirmAtmPin && <p className="text-red-400 text-sm">{errors.confirmAtmPin}</p>}
                 </div>
@@ -405,16 +427,26 @@ export default function CardForm({ onSave, onCancel }: CardFormProps) {
                 onClick={() => setActiveTab("basic")}
                 variant="outline"
                 className="border-white/20 text-white hover:bg-white/10"
+                disabled={isSaving}
               >
                 Back
               </Button>
 
-              <motion.div whileHover={{ scale: 1.05 }} whileTap={{ scale: 0.95 }}>
+              <motion.div whileHover={{ scale: isSaving ? 1 : 1.05 }} whileTap={{ scale: isSaving ? 1 : 0.95 }}>
                 <Button
                   type="submit"
                   className="bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 hover:from-red-600 hover:via-purple-600 hover:to-blue-600 text-white font-medium py-2 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                  disabled={isSaving}
                 >
-                  <Save className="mr-2 h-4 w-4" /> Save Card
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Saving...
+                    </>
+                  ) : (
+                    <>
+                      <Save className="mr-2 h-4 w-4" /> Save Card
+                    </>
+                  )}
                 </Button>
               </motion.div>
             </div>
