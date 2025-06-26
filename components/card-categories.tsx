@@ -14,9 +14,11 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null)
 
   // Categorize cards
-  const creditCards = cards.filter((card) => card.cardNumber.startsWith("4"))
-  const debitCards = cards.filter((card) => card.cardNumber.startsWith("5"))
-  const otherCards = cards.filter((card) => !card.cardNumber.startsWith("4") && !card.cardNumber.startsWith("5"))
+  const creditCards = cards.filter((card) => card.cardType === "credit")
+  const debitCards = cards.filter((card) => card.cardType === "debit")
+  const prepaidCards = cards.filter((card) => card.cardType === "prepaid")
+  const giftCards = cards.filter((card) => card.cardType === "gift")
+  const otherCards = cards.filter((card) => card.cardType === "other")
 
   // Group by bank
   const bankGroups = cards.reduce(
@@ -45,10 +47,22 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
       color: "from-green-600 to-green-800",
     },
     {
-      name: "Other Cards",
-      count: otherCards.length,
+      name: "Prepaid Cards",
+      count: prepaidCards.length,
       icon: <Gift className="h-5 w-5" />,
       color: "from-purple-600 to-purple-800",
+    },
+    {
+      name: "Gift Cards",
+      count: giftCards.length,
+      icon: <Gift className="h-5 w-5" />,
+      color: "from-pink-600 to-pink-800",
+    },
+    {
+      name: "Other Cards",
+      count: otherCards.length,
+      icon: <CreditCardIcon className="h-5 w-5" />,
+      color: "from-gray-600 to-gray-800",
     },
   ]
 
@@ -161,7 +175,7 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
                         <div>
                           <div className="font-medium light-mode-text">{card.cardName}</div>
                           <div className="text-sm dark:text-white/70 light:text-gray-600">
-                            **** **** **** {card.cardNumber.slice(-4)}
+                            **** **** **** {card.cardNumber.slice(-4)} • {card.issuer.toUpperCase()}
                           </div>
                         </div>
                       </div>
@@ -180,7 +194,45 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
                         <div>
                           <div className="font-medium light-mode-text">{card.cardName}</div>
                           <div className="text-sm dark:text-white/70 light:text-gray-600">
-                            **** **** **** {card.cardNumber.slice(-4)}
+                            **** **** **** {card.cardNumber.slice(-4)} • {card.issuer.toUpperCase()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-sm light-mode-text">{card.bankName || "Unknown Bank"}</div>
+                    </div>
+                  ))}
+
+                {selectedCategory === "Prepaid Cards" &&
+                  prepaidCards.map((card, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between dark:bg-black/20 light:bg-white p-3 rounded-lg"
+                    >
+                      <div className="flex items-center">
+                        <Gift className="h-5 w-5 mr-3 text-purple-400" />
+                        <div>
+                          <div className="font-medium light-mode-text">{card.cardName}</div>
+                          <div className="text-sm dark:text-white/70 light:text-gray-600">
+                            **** **** **** {card.cardNumber.slice(-4)} • {card.issuer.toUpperCase()}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="text-sm light-mode-text">{card.bankName || "Unknown Bank"}</div>
+                    </div>
+                  ))}
+
+                {selectedCategory === "Gift Cards" &&
+                  giftCards.map((card, i) => (
+                    <div
+                      key={i}
+                      className="flex items-center justify-between dark:bg-black/20 light:bg-white p-3 rounded-lg"
+                    >
+                      <div className="flex items-center">
+                        <Gift className="h-5 w-5 mr-3 text-pink-400" />
+                        <div>
+                          <div className="font-medium light-mode-text">{card.cardName}</div>
+                          <div className="text-sm dark:text-white/70 light:text-gray-600">
+                            **** **** **** {card.cardNumber.slice(-4)} • {card.issuer.toUpperCase()}
                           </div>
                         </div>
                       </div>
@@ -195,11 +247,11 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
                       className="flex items-center justify-between dark:bg-black/20 light:bg-white p-3 rounded-lg"
                     >
                       <div className="flex items-center">
-                        <Gift className="h-5 w-5 mr-3 text-purple-400" />
+                        <CreditCardIcon className="h-5 w-5 mr-3 text-gray-400" />
                         <div>
                           <div className="font-medium light-mode-text">{card.cardName}</div>
                           <div className="text-sm dark:text-white/70 light:text-gray-600">
-                            **** **** **** {card.cardNumber.slice(-4)}
+                            **** **** **** {card.cardNumber.slice(-4)} • {card.issuer.toUpperCase()}
                           </div>
                         </div>
                       </div>
@@ -217,12 +269,12 @@ export default function CardCategories({ cards }: CardCategoriesProps) {
                       <div>
                         <div className="font-medium light-mode-text">{card.cardName}</div>
                         <div className="text-sm dark:text-white/70 light:text-gray-600">
-                          **** **** **** {card.cardNumber.slice(-4)}
+                          **** **** **** {card.cardNumber.slice(-4)} • {card.issuer.toUpperCase()}
                         </div>
                       </div>
                     </div>
                     <div className="text-sm light-mode-text">
-                      {card.cardNumber.startsWith("4") ? "Credit" : card.cardNumber.startsWith("5") ? "Debit" : "Other"}
+                      {card.cardType.charAt(0).toUpperCase() + card.cardType.slice(1)}
                     </div>
                   </div>
                 ))}

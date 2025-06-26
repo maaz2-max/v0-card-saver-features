@@ -16,6 +16,15 @@ import SuccessAnimation from "@/components/success-animation"
 import UserProfile from "@/components/user-profile"
 import CardCategories from "@/components/card-categories"
 import CardStats from "@/components/card-stats"
+import DocumentForm from "@/components/document-form"
+import DocumentGrid from "@/components/document-grid"
+import type { CardData } from "@/types/card"
+import type { DocumentData } from "@/types/document"
+import { preventScreenCapture } from "@/lib/security"
+import { useTheme } from "next-themes"
+import { useAuth } from "@/components/auth-provider"
+import { saveCard, getCards, deleteCard, getUserProfile } from "@/lib/card-service"
+import { saveDocument, getDocuments, deleteDocument } from "@/lib/document-service"
 import {
   CreditCard,
   Plus,
@@ -34,12 +43,8 @@ import {
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  FileText,
 } from "lucide-react"
-import type { CardData } from "@/types/card"
-import { preventScreenCapture } from "@/lib/security"
-import { useTheme } from "next-themes"
-import { useAuth } from "@/components/auth-provider"
-import { saveCard, getCards, deleteCard, getUserProfile } from "@/lib/card-service"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -73,6 +78,14 @@ export default function CardSaver() {
   const { theme, setTheme, resolvedTheme } = useTheme()
   const { user, signOut } = useAuth()
   const tabsRef = useRef<HTMLDivElement>(null)
+
+  const [documents, setDocuments] = useState<DocumentData[]>([])
+  const [showAddDocument, setShowAddDocument] = useState(false)
+  const [selectedDocument, setSelectedDocument] = useState<DocumentData | null>(null)
+  const [showDocumentPinPad, setShowDocumentPinPad] = useState(false)
+  const [showDocumentDetails, setShowDocumentDetails] = useState(false)
+  const [documentDeleteMode, setDocumentDeleteMode] = useState(false)
+  const [documentToDelete, setDocumentToDelete] = useState<string | null>(null)
 
   // Check scroll position for mobile tabs
   const checkScrollPosition = useCallback(() => {
@@ -120,15 +133,16 @@ export default function CardSaver() {
           // Continue loading cards even if profile fails
         }
 
-        // Then load cards
-        const loadedCards = await getCards()
+        // Then load cards and documents
+        const [loadedCards, loadedDocuments] = await Promise.all([getCards(), getDocuments()])
         setCards(loadedCards)
+        setDocuments(loadedDocuments)
 
         // Show welcome toast on first load
-        if (loadedCards.length > 0) {
+        if (loadedCards.length > 0 || loadedDocuments.length > 0) {
           toast({
             title: "Welcome back!",
-            description: `You have ${loadedCards.length} saved cards.`,
+            description: `You have ${loadedCards.length} cards and ${loadedDocuments.length} documents.`,
           })
         }
       } catch (error) {
@@ -274,9 +288,94 @@ export default function CardSaver() {
     }, 60000)
   }
 
-  const handlePinCancel = () => {
-    setShowPinPad(false)
-    setSelectedCard(null)
+  const handleSaveDocument = async (document: DocumentData) => {
+    try {
+      setIsSaving(true)
+      const savedDocument = await saveDocument(document)
+
+      // Add the new document to the state
+      setDocuments((prev) => [{ ...document, id: savedDocument.id }, ...prev])
+
+      setShowAddDocument(false)
+      setShowSuccess(true)
+
+      // Hide success animation after 3 seconds
+      setTimeout(() => {
+        setShowSuccess(false)
+      }, 3000)
+
+      toast({
+        title: "Document Saved Successfully",
+        description: "Your document has been securely encrypted and saved.",
+      })
+    } catch (error) {
+      console.error("Error saving document:", error)
+      toast({
+        title: "Error",
+        description: "Failed to save your document. Please try again.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsSaving(false)
+    }
+  }
+
+  const handleDocumentSelect = (document: DocumentData) => {
+    if (documentDeleteMode) return
+    setSelectedDocument(document)
+
+    if (document.hasPin) {
+      setShowDocumentPinPad(true)
+    } else {
+      setShowDocumentDetails(true)
+    }
+  }
+
+  const handleDocumentPinSuccess = () => {
+    setShowDocumentPinPad(false)
+    setShowDocumentDetails(true)
+
+    toast({
+      title: "PIN Verified",
+      description: "Document details will be visible for 1 minute.",
+    })
+
+    // Auto-hide details after 1 minute
+    setTimeout(() => {
+      setShowDocumentDetails(false)
+      toast({
+        title: "Session Expired",
+        description: "Document details have been hidden for security.",
+      })
+    }, 60000)
+  }
+
+  const confirmDeleteDocument = (id: string) => {
+    setDocumentToDelete(id)
+    setShowDeleteConfirm(true)
+  }
+
+  const handleDeleteDocument = async (id: string) => {
+    try {
+      await deleteDocument(id)
+
+      // Remove the document from the state
+      setDocuments((prev) => prev.filter((doc) => doc.id !== id))
+
+      toast({
+        title: "Document Deleted",
+        description: "Your document has been permanently removed.",
+      })
+
+      setDocumentDeleteMode(false)
+    } catch (error) {
+      console.error("Error deleting document:", error)
+      toast({
+        title: "Error",
+        description: "Failed to delete your document. Please try again.",
+        variant: "destructive",
+      })
+    }
   }
 
   // Memoize the theme toggle function to improve performance
@@ -298,11 +397,11 @@ export default function CardSaver() {
     activeCategory === "all"
       ? cards
       : cards.filter((card) => {
-          // Simple categorization based on card number patterns
-          if (activeCategory === "credit" && card.cardNumber.startsWith("4")) return true
-          if (activeCategory === "debit" && card.cardNumber.startsWith("5")) return true
-          if (activeCategory === "other" && !card.cardNumber.startsWith("4") && !card.cardNumber.startsWith("5"))
-            return true
+          if (activeCategory === "credit" && card.cardType === "credit") return true
+          if (activeCategory === "debit" && card.cardType === "debit") return true
+          if (activeCategory === "prepaid" && card.cardType === "prepaid") return true
+          if (activeCategory === "gift" && card.cardType === "gift") return true
+          if (activeCategory === "other" && card.cardType === "other") return true
           return false
         })
 
@@ -503,6 +602,7 @@ export default function CardSaver() {
           >
             {[
               { value: "cards", icon: CreditCard, label: "Cards" },
+              { value: "documents", icon: FileText, label: "Documents" },
               { value: "categories", icon: Tags, label: "Categories" },
               { value: "stats", icon: BarChart3, label: "Stats" },
               { value: "security", icon: Shield, label: "Security" },
@@ -557,6 +657,13 @@ export default function CardSaver() {
               <CreditCard className="mr-1 h-4 w-4" />
             </motion.div>
             My Cards
+          </TabsTrigger>
+          <TabsTrigger
+            value="documents"
+            className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-purple-600 data-[state=active]:to-blue-600 data-[state=active]:text-white text-gray-800 dark:text-white text-sm"
+          >
+            <FileText className="mr-1 h-4 w-4" />
+            Documents
           </TabsTrigger>
           <TabsTrigger
             value="categories"
@@ -796,7 +903,10 @@ export default function CardSaver() {
               >
                 <PinPad
                   onSuccess={handlePinSuccess}
-                  onCancel={handlePinCancel}
+                  onCancel={() => {
+                    setShowPinPad(false)
+                    setSelectedCard(null)
+                  }}
                   cardName={selectedCard.cardName}
                   onDeleteCard={() => confirmDeleteCard(selectedCard.id)}
                   selectedCard={selectedCard}
@@ -868,6 +978,52 @@ export default function CardSaver() {
                     </motion.div>
                   </div>
                 </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </TabsContent>
+
+        <TabsContent value="documents" className="space-y-4">
+          <AnimatePresence>
+            {documents.length === 0 && !showAddDocument ? (
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className="text-center p-12 bg-white/90 dark:bg-black/20 text-gray-800 dark:text-white rounded-lg backdrop-blur-sm border border-purple-200/50 dark:border-white/10"
+              >
+                <div className="mb-4">
+                  <FileText className="mx-auto h-16 w-16 opacity-50 mb-4 text-gray-600 dark:text-white" />
+                  <h3 className="text-xl font-medium">No Documents Saved</h3>
+                  <p className="text-gray-600 dark:text-gray-300 mt-2">Add your first document to get started</p>
+                </div>
+                <Button
+                  onClick={() => setShowAddDocument(true)}
+                  className="mt-4 bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 hover:from-red-600 hover:via-purple-600 hover:to-blue-600 text-white font-medium py-2 px-6 rounded-full shadow-lg hover:shadow-xl transition-all duration-300"
+                >
+                  <Plus className="mr-2 h-4 w-4" />
+                  Add Document
+                </Button>
+              </motion.div>
+            ) : null}
+
+            {documents.length > 0 && !showAddDocument && !showDocumentPinPad && !showDocumentDetails ? (
+              <DocumentGrid
+                documents={documents}
+                onDocumentSelect={handleDocumentSelect}
+                onAddDocument={() => setShowAddDocument(true)}
+                deleteMode={documentDeleteMode}
+                onDeleteDocument={(index) => confirmDeleteDocument(documents[index].id!)}
+              />
+            ) : null}
+
+            {showAddDocument && (
+              <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -20 }}>
+                <DocumentForm
+                  onSave={handleSaveDocument}
+                  onCancel={() => setShowAddDocument(false)}
+                  isSaving={isSaving}
+                />
               </motion.div>
             )}
           </AnimatePresence>

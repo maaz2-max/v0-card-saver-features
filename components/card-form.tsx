@@ -24,6 +24,7 @@ import {
   Loader2,
 } from "lucide-react"
 import { generateCardBackground } from "@/lib/colors"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 
 interface CardFormProps {
   onSave: (card: CardData) => void
@@ -45,6 +46,27 @@ export default function CardForm({ onSave, onCancel, isSaving = false }: CardFor
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [activeTab, setActiveTab] = useState("basic")
   const [includeCvv, setIncludeCvv] = useState(true)
+  const [cardType, setCardType] = useState<CardData["cardType"]>("debit")
+  const [issuer, setIssuer] = useState<CardData["issuer"]>("visa")
+
+  const cardTypes = [
+    { value: "debit", label: "Debit Card" },
+    { value: "credit", label: "Credit Card" },
+    { value: "prepaid", label: "Prepaid Card" },
+    { value: "gift", label: "Gift Card" },
+    { value: "other", label: "Other" },
+  ]
+
+  const issuers = [
+    { value: "visa", label: "Visa" },
+    { value: "mastercard", label: "Mastercard" },
+    { value: "rupay", label: "RuPay" },
+    { value: "discover", label: "Discover" },
+    { value: "amex", label: "American Express" },
+    { value: "diners", label: "Diners Club" },
+    { value: "jcb", label: "JCB" },
+    { value: "other", label: "Other" },
+  ]
 
   const handleCardNumberChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "")
@@ -156,6 +178,8 @@ export default function CardForm({ onSave, onCancel, isSaving = false }: CardFor
         cvv: includeCvv ? cvv : "",
         pin,
         atmPin,
+        cardType,
+        issuer,
       }
 
       onSave(card)
@@ -254,6 +278,48 @@ export default function CardForm({ onSave, onCancel, isSaving = false }: CardFor
                 className="bg-white/10 border-white/20 text-white placeholder:text-gray-500"
                 disabled={isSaving}
               />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label className="text-white">Card Type</Label>
+                <Select
+                  value={cardType}
+                  onValueChange={(value) => setCardType(value as CardData["cardType"])}
+                  disabled={isSaving}
+                >
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {cardTypes.map((type) => (
+                      <SelectItem key={type.value} value={type.value}>
+                        {type.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label className="text-white">Card Issuer</Label>
+                <Select
+                  value={issuer}
+                  onValueChange={(value) => setIssuer(value as CardData["issuer"])}
+                  disabled={isSaving}
+                >
+                  <SelectTrigger className="bg-white/10 border-white/20 text-white">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {issuers.map((issuer) => (
+                      <SelectItem key={issuer.value} value={issuer.value}>
+                        {issuer.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
             <div className="space-y-2">
