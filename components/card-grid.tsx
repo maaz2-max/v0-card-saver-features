@@ -16,7 +16,7 @@ interface CardGridProps {
   onDeleteCard: (index: number) => void
 }
 
-export default function CardGrid({ cards, onCardSelect, onAddCard, deleteMode, onDeleteCard }: CardGridProps) {
+function CardGrid({ cards, onCardSelect, onAddCard, deleteMode, onDeleteCard }: CardGridProps) {
   const [searchTerm, setSearchTerm] = useState("")
 
   // Memoize filtered cards for better performance
@@ -136,3 +136,6 @@ export default function CardGrid({ cards, onCardSelect, onAddCard, deleteMode, o
     </div>
   )
 }
+
+// Add default export
+export default CardGrid

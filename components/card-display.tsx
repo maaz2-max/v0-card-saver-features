@@ -17,7 +17,7 @@ interface CardDisplayProps {
   index?: number
 }
 
-export default function CardDisplay({ card, showDetails, deleteMode = false, onDelete, index }: CardDisplayProps) {
+function CardDisplay({ card, showDetails, deleteMode = false, onDelete, index }: CardDisplayProps) {
   const [isFlipped, setIsFlipped] = useState(false)
   const [copied, setCopied] = useState(false)
 
@@ -163,3 +163,6 @@ export default function CardDisplay({ card, showDetails, deleteMode = false, onD
     </motion.div>
   )
 }
+
+// Add default export
+export default CardDisplay

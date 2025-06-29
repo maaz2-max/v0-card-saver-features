@@ -16,7 +16,7 @@ interface PinPadProps {
   selectedCard: CardData & { id: string }
 }
 
-export default function PinPad({ onSuccess, onCancel, onDeleteCard, cardName, selectedCard }: PinPadProps) {
+function PinPad({ onSuccess, onCancel, onDeleteCard, cardName, selectedCard }: PinPadProps) {
   const [pin, setPin] = useState("")
   const [error, setError] = useState("")
   const [attempts, setAttempts] = useState(0)
@@ -230,7 +230,10 @@ export default function PinPad({ onSuccess, onCancel, onDeleteCard, cardName, se
         style={{ transformStyle: "preserve-3d" }}
       >
         Verify
-      </motion.button>
+      </Button>
     </Card>
   )
 }
+
+// Add default export
+export default PinPad

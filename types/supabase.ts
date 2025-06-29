@@ -29,6 +29,47 @@ export interface Database {
           bank_name?: string | null
         }
       }
+      documents: {
+        Row: {
+          id: string
+          created_at: string
+          user_id: string
+          document_name: string
+          document_type: string
+          holder_name: string | null
+          issue_date: string | null
+          expiry_date: string | null
+          issuing_authority: string | null
+          has_pin: boolean
+          document_data: Json
+        }
+        Insert: {
+          id?: string
+          created_at?: string
+          user_id: string
+          document_name: string
+          document_type: string
+          holder_name?: string | null
+          issue_date?: string | null
+          expiry_date?: string | null
+          issuing_authority?: string | null
+          has_pin: boolean
+          document_data: Json
+        }
+        Update: {
+          id?: string
+          created_at?: string
+          user_id?: string
+          document_name?: string
+          document_type?: string
+          holder_name?: string | null
+          issue_date?: string | null
+          expiry_date?: string | null
+          issuing_authority?: string | null
+          has_pin?: boolean
+          document_data?: Json
+        }
+      }
       profiles: {
         Row: {
           id: string

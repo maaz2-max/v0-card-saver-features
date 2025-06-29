@@ -32,7 +32,7 @@ interface CardFormProps {
   isSaving?: boolean
 }
 
-export default function CardForm({ onSave, onCancel, isSaving = false }: CardFormProps) {
+function CardForm({ onSave, onCancel, isSaving = false }: CardFormProps) {
   const [cardName, setCardName] = useState("")
   const [bankName, setBankName] = useState("")
   const [cardHolderName, setCardHolderName] = useState("")
@@ -522,3 +522,6 @@ export default function CardForm({ onSave, onCancel, isSaving = false }: CardFor
     </Card>
   )
 }
+
+// Add default export
+export default CardForm
