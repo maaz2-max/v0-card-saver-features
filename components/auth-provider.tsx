@@ -106,7 +106,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error("Failed to initialize Supabase:", error)
-        setSupabaseError(error instanceof Error ? error.message : "Failed to initialize authentication")
+        const errorMessage = error instanceof Error ? error.message : "Failed to initialize authentication"
+        setSupabaseError(errorMessage)
         setIsLoading(false)
       }
     }
@@ -142,33 +143,37 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   if (supabaseError) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-100 to-red-200">
-        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
-          <h2 className="text-2xl font-bold text-red-600 mb-4">Configuration Error</h2>
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-2xl">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Supabase Configuration Error</h2>
           <p className="text-gray-700 mb-4">
-            Supabase is not properly configured. Please check your environment variables.
+            The application cannot connect to Supabase. Please check your configuration.
           </p>
-          <p className="text-sm text-gray-500 mb-4">
-            Error: {supabaseError}
-          </p>
-          <div className="text-left text-sm text-gray-600 mb-4">
-            <p className="font-semibold mb-2">To fix this:</p>
-            <ol className="list-decimal list-inside space-y-1">
-              <li>Create a Supabase project at supabase.com</li>
-              <li>Copy your project URL and anon key</li>
-              <li>Update your .env.local file with the correct values</li>
-              <li>Restart your development server</li>
+          <div className="text-left bg-gray-50 p-4 rounded-lg mb-4">
+            <p className="text-sm text-red-600 font-mono break-all">
+              {supabaseError}
+            </p>
+          </div>
+          <div className="text-left text-sm text-gray-600 mb-6">
+            <p className="font-semibold mb-3">To fix this issue:</p>
+            <ol className="list-decimal list-inside space-y-2">
+              <li>Go to <a href="https://supabase.com/dashboard" target="_blank" rel="noopener noreferrer" className="text-blue-600 hover:underline">supabase.com/dashboard</a></li>
+              <li>Create a new project or select an existing one</li>
+              <li>Go to Settings → API in your project dashboard</li>
+              <li>Copy your Project URL and anon/public key</li>
+              <li>Update your <code className="bg-gray-200 px-1 rounded">.env.local</code> file with the actual values</li>
+              <li>Restart your development server (<code className="bg-gray-200 px-1 rounded">npm run dev</code>)</li>
             </ol>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 justify-center">
             <button
               onClick={() => window.location.reload()}
-              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700 transition-colors"
             >
-              Retry
+              Retry Connection
             </button>
             <button
               onClick={() => router.push("/features")}
-              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700 transition-colors"
             >
               View Features
             </button>
