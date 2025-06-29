@@ -221,19 +221,21 @@ function PinPad({ onSuccess, onCancel, onDeleteCard, cardName, selectedCard }: P
         </motion.button>
       </div>
 
-      <motion.button
+      <motion.div
         whileHover={{ scale: 1.05, boxShadow: "0 10px 25px -5px rgba(124, 58, 237, 0.5)" }}
         whileTap={{ scale: 0.95 }}
-        onClick={handleSubmit}
-        disabled={pin.length !== 4 || isLocked}
-        className="w-full mt-4 bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 hover:from-red-600 hover:via-purple-600 hover:to-blue-600 text-white font-medium py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform"
-        style={{ transformStyle: "preserve-3d" }}
       >
-        Verify
-      </Button>
+        <Button
+          onClick={handleSubmit}
+          disabled={pin.length !== 4 || isLocked}
+          className="w-full mt-4 bg-gradient-to-r from-red-500 via-purple-500 to-blue-500 hover:from-red-600 hover:via-purple-600 hover:to-blue-600 text-white font-medium py-3 px-6 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-50 disabled:cursor-not-allowed transform"
+          style={{ transformStyle: "preserve-3d" }}
+        >
+          Verify
+        </Button>
+      </motion.div>
     </Card>
   )
 }
 
-// Add default export
 export default PinPad

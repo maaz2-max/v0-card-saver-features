@@ -164,5 +164,4 @@ function CardDisplay({ card, showDetails, deleteMode = false, onDelete, index }:
   )
 }
 
-// Add default export
 export default CardDisplay

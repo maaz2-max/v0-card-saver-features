@@ -137,5 +137,4 @@ function CardGrid({ cards, onCardSelect, onAddCard, deleteMode, onDeleteCard }: 
   )
 }
 
-// Add default export
 export default CardGrid

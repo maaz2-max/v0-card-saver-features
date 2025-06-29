@@ -523,5 +523,4 @@ function CardForm({ onSave, onCancel, isSaving = false }: CardFormProps) {
   )
 }
 
-// Add default export
 export default CardForm
