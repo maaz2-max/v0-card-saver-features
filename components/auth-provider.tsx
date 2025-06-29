@@ -27,80 +27,93 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [session, setSession] = useState<Session | null>(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [supabaseError, setSupabaseError] = useState<string | null>(null)
   const router = useRouter()
   const pathname = usePathname()
-  const supabase = getSupabaseBrowserClient()
 
   useEffect(() => {
-    const getSession = async () => {
-      setIsLoading(true)
+    const initializeAuth = async () => {
       try {
-        const { data, error } = await supabase.auth.getSession()
-        if (error) {
-          console.error("Error getting session:", error)
-          throw error
+        const supabase = getSupabaseBrowserClient()
+        
+        const getSession = async () => {
+          setIsLoading(true)
+          try {
+            const { data, error } = await supabase.auth.getSession()
+            if (error) {
+              console.error("Error getting session:", error)
+              throw error
+            }
+
+            setSession(data.session)
+            setUser(data.session?.user ?? null)
+
+            // Handle redirects based on authentication state
+            if (data.session?.user) {
+              // User is authenticated
+              if (pathname?.startsWith("/auth/")) {
+                router.push("/")
+              }
+            } else {
+              // User is not authenticated
+              if (!pathname?.startsWith("/auth/") && !pathname?.startsWith("/features") && !pathname?.startsWith("/landing")) {
+                router.push("/features")
+              }
+            }
+          } catch (error) {
+            console.error("Error getting session:", error)
+            setSession(null)
+            setUser(null)
+            if (!pathname?.startsWith("/auth/") && !pathname?.startsWith("/features") && !pathname?.startsWith("/landing")) {
+              router.push("/features")
+            }
+          } finally {
+            setIsLoading(false)
+          }
         }
 
-        setSession(data.session)
-        setUser(data.session?.user ?? null)
+        await getSession()
 
-        // Handle redirects based on authentication state
-        if (data.session?.user) {
-          // User is authenticated
-          if (pathname?.startsWith("/auth/")) {
+        const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
+          console.log("Auth state changed:", event, session?.user?.email)
+
+          setSession(session)
+          setUser(session?.user ?? null)
+          setIsLoading(false)
+
+          // Handle authentication events
+          if (event === "SIGNED_IN" && session) {
+            console.log("User signed in, redirecting to dashboard")
             router.push("/")
           }
-        } else {
-          // User is not authenticated
-          if (!pathname?.startsWith("/auth/")) {
-            router.push("/auth/sign-in")
+
+          if (event === "SIGNED_OUT") {
+            console.log("User signed out, redirecting to features")
+            router.push("/features")
           }
+
+          if (event === "TOKEN_REFRESHED") {
+            console.log("Token refreshed")
+          }
+        })
+
+        return () => {
+          authListener.subscription.unsubscribe()
         }
       } catch (error) {
-        console.error("Error getting session:", error)
-        setSession(null)
-        setUser(null)
-        if (!pathname?.startsWith("/auth/")) {
-          router.push("/auth/sign-in")
-        }
-      } finally {
+        console.error("Failed to initialize Supabase:", error)
+        setSupabaseError(error instanceof Error ? error.message : "Failed to initialize authentication")
         setIsLoading(false)
       }
     }
 
-    getSession()
-
-    const { data: authListener } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log("Auth state changed:", event, session?.user?.email)
-
-      setSession(session)
-      setUser(session?.user ?? null)
-      setIsLoading(false)
-
-      // Handle authentication events
-      if (event === "SIGNED_IN" && session) {
-        console.log("User signed in, redirecting to dashboard")
-        router.push("/")
-      }
-
-      if (event === "SIGNED_OUT") {
-        console.log("User signed out, redirecting to sign-in")
-        router.push("/auth/sign-in")
-      }
-
-      if (event === "TOKEN_REFRESHED") {
-        console.log("Token refreshed")
-      }
-    })
-
-    return () => {
-      authListener.subscription.unsubscribe()
-    }
-  }, [supabase, router, pathname])
+    initializeAuth()
+  }, [router, pathname])
 
   const signOut = async () => {
     try {
       setIsLoading(true)
+      const supabase = getSupabaseBrowserClient()
       const { error } = await supabase.auth.signOut()
       if (error) {
         console.error("Error signing out:", error)
@@ -111,13 +124,38 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setSession(null)
       setUser(null)
 
-      // Redirect to sign-in page
-      router.push("/auth/sign-in")
+      // Redirect to features page
+      router.push("/features")
     } catch (error) {
       console.error("Sign out error:", error)
     } finally {
       setIsLoading(false)
     }
+  }
+
+  // Show error state if Supabase failed to initialize
+  if (supabaseError) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-red-100 to-red-200">
+        <div className="text-center p-8 bg-white rounded-lg shadow-lg max-w-md">
+          <h2 className="text-2xl font-bold text-red-600 mb-4">Configuration Error</h2>
+          <p className="text-gray-700 mb-4">
+            Supabase is not properly configured. Please check your environment variables.
+          </p>
+          <p className="text-sm text-gray-500">
+            Error: {supabaseError}
+          </p>
+          <div className="mt-6">
+            <button
+              onClick={() => window.location.reload()}
+              className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
+            >
+              Retry
+            </button>
+          </div>
+        </div>
+      </div>
+    )
   }
 
   const value = {
