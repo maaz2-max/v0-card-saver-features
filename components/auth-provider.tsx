@@ -4,7 +4,6 @@ import type React from "react"
 
 import { createContext, useContext, useEffect, useState } from "react"
 import { useRouter, usePathname } from "next/navigation"
-import { getSupabaseBrowserClient } from "@/lib/supabase"
 import type { Session, User } from "@supabase/supabase-js"
 
 type AuthContextType = {
@@ -32,8 +31,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const pathname = usePathname()
 
   useEffect(() => {
+    // Only run on client side
+    if (typeof window === 'undefined') return
+
     const initializeAuth = async () => {
       try {
+        // Dynamic import to ensure client-side only
+        const { getSupabaseBrowserClient } = await import("@/lib/supabase")
         const supabase = getSupabaseBrowserClient()
         
         const getSession = async () => {
@@ -113,6 +117,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const signOut = async () => {
     try {
       setIsLoading(true)
+      const { getSupabaseBrowserClient } = await import("@/lib/supabase")
       const supabase = getSupabaseBrowserClient()
       const { error } = await supabase.auth.signOut()
       if (error) {
@@ -142,15 +147,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           <p className="text-gray-700 mb-4">
             Supabase is not properly configured. Please check your environment variables.
           </p>
-          <p className="text-sm text-gray-500">
+          <p className="text-sm text-gray-500 mb-4">
             Error: {supabaseError}
           </p>
-          <div className="mt-6">
+          <div className="text-left text-sm text-gray-600 mb-4">
+            <p className="font-semibold mb-2">To fix this:</p>
+            <ol className="list-decimal list-inside space-y-1">
+              <li>Create a Supabase project at supabase.com</li>
+              <li>Copy your project URL and anon key</li>
+              <li>Update your .env.local file with the correct values</li>
+              <li>Restart your development server</li>
+            </ol>
+          </div>
+          <div className="flex gap-2">
             <button
               onClick={() => window.location.reload()}
               className="bg-red-600 text-white px-4 py-2 rounded hover:bg-red-700"
             >
               Retry
+            </button>
+            <button
+              onClick={() => router.push("/features")}
+              className="bg-gray-600 text-white px-4 py-2 rounded hover:bg-gray-700"
+            >
+              View Features
             </button>
           </div>
         </div>

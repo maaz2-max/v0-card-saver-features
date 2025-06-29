@@ -1,26 +1,43 @@
 import { createClient } from "@supabase/supabase-js"
 import type { Database } from "@/types/supabase"
 
+// Validate environment variables
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
+const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  console.error('Missing Supabase environment variables')
+}
+
 // Create a single supabase client for the browser
 const createBrowserClient = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
-
-  if (!supabaseUrl) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_URL environment variable")
+  if (!supabaseUrl || !supabaseAnonKey) {
+    throw new Error("Missing Supabase environment variables. Please check your .env.local file.")
   }
 
-  if (!supabaseAnonKey) {
-    throw new Error("Missing NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable")
+  // Validate URL format
+  try {
+    new URL(supabaseUrl)
+  } catch {
+    throw new Error("Invalid NEXT_PUBLIC_SUPABASE_URL format. Please check your environment variables.")
   }
 
-  return createClient<Database>(supabaseUrl, supabaseAnonKey)
+  return createClient<Database>(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      persistSession: true,
+      autoRefreshToken: true,
+    },
+  })
 }
 
 // Create a singleton instance for client-side
 let browserClient: ReturnType<typeof createBrowserClient> | null = null
 
 export function getSupabaseBrowserClient() {
+  if (typeof window === 'undefined') {
+    throw new Error('getSupabaseBrowserClient should only be called on the client side')
+  }
+  
   if (!browserClient) {
     browserClient = createBrowserClient()
   }
@@ -29,18 +46,14 @@ export function getSupabaseBrowserClient() {
 
 // Create a server client (for server components and server actions)
 export function createServerClient() {
-  const supabaseUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+  const serverUrl = process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL
+  const serverKey = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
 
-  if (!supabaseUrl) {
-    throw new Error("Missing SUPABASE_URL or NEXT_PUBLIC_SUPABASE_URL environment variable")
+  if (!serverUrl || !serverKey) {
+    throw new Error("Missing server-side Supabase environment variables")
   }
 
-  if (!supabaseServiceKey) {
-    throw new Error("Missing SUPABASE_SERVICE_ROLE_KEY or NEXT_PUBLIC_SUPABASE_ANON_KEY environment variable")
-  }
-
-  return createClient<Database>(supabaseUrl, supabaseServiceKey, {
+  return createClient<Database>(serverUrl, serverKey, {
     auth: {
       persistSession: false,
     },
